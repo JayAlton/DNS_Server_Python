@@ -21,6 +21,7 @@ def main():
             id = int.from_bytes(buf[:2], "big")
             replyMessage = Message.build_reply(
                 id_query = id,
+                id=1234,
                 questions=[
                     Question(
                         name="codecrafters.io",
