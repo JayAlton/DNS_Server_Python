@@ -49,9 +49,19 @@ class DNSMessage:
                 0,
             ),
         ):
-            combined2 |= val << cur_shift
+            combined1 |= val << cur_shift
             cur_shift += delta_shift
         
+        # assume big endian
+        combined2 = 0
+        cur_shift = 0
+        for val, delta_shift in zip (
+            (self.rcode, self.z, self.ra),
+            (DNSMessage.RCODE_LEN, DNS_Message.Z_LEN, DNS_Message.RA_LEN),
+        ):
+            combined2 |= val << cur_shift
+            cur_shift += delta_shift
+            
         return struct.pack(
             ">HHHHHH",
             self.id,
