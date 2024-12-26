@@ -57,7 +57,7 @@ class DNSMessage:
         cur_shift = 0
         for val, delta_shift in zip (
             (self.rcode, self.z, self.ra),
-            (DNSMessage.RCODE_LEN, DNS_Message.Z_LEN, DNS_Message.RA_LEN),
+            (DNSMessage.RCODE_LEN, DNSMessage.Z_LEN, DNSMessage.RA_LEN),
         ):
             combined2 |= val << cur_shift
             cur_shift += delta_shift
@@ -110,7 +110,7 @@ def main():
                 response_data = DNSMessage(
                     id=1234,
                     qr=1,
-                    opcode=0,
+                    op_code=0,
                     aa=0,
                     tc=0,
                     rd=0,
