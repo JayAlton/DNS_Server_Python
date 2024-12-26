@@ -15,10 +15,20 @@ def main():
             # Extract the current opcode (from the flags field)
             opcode = (flags >> 11) & 0x0F  # Extract opcode from flags (top 4 bits)
             
-            # If the query's opcode is not QUERY (opcode 0), set to IQUERY (opcode 1)
-            if opcode != 0:
-                print(f"Received IQUERY (opcode {opcode}), changing to QUERY response")
-                opcode = 1  # IQUERY opcode
+            # Handle different opcodes
+            if opcode == 0:  # Standard Query (QUERY)
+                # Proceed as a normal query response
+                print(f"Received QUERY (opcode 0), responding normally.")
+            elif opcode == 1:  # Inverse Query (IQUERY)
+                print(f"Received IQUERY (opcode 1), changing to QUERY response")
+                opcode = 0  # Change to QUERY response
+            elif opcode == 2:  # Status Query (STATUS)
+                print(f"Received STATUS Query (opcode 2), responding with STATUS response.")
+                # Handle STATUS query (opcode 2) by setting the response flags
+                opcode = 2  # Ensure the response opcode is 2
+            else:
+                print(f"Unknown Opcode {opcode}, responding with QUERY.")
+                opcode = 0  # Default to QUERY for unknown opcodes
 
             # Add the question section (codecrafters.io, IN, A)
             name = b"\x0ccodecrafters\x02io\x00"
@@ -31,8 +41,9 @@ def main():
             flags |= 0x8000  # Set the QR bit to 1 for response
             flags |= (opcode << 11)  # Set the correct opcode in the flags
 
-            # Set the Rcode (Response Code) to NOTIMP (4)
-            flags |= (4 << 0)  # Set the Rcode to 4 (NOTIMP)
+            # Set the Rcode (Response Code) to NOERROR (0)
+            flags &= 0xFF0F  # Clear the Rcode bits
+            flags |= (0 << 0)  # Set Rcode to 0 (NOERROR)
             
             # Create the DNS response header with the appropriate flags and opcode
             response = struct.pack(
