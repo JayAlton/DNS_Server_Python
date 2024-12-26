@@ -2,6 +2,8 @@ import socket
 
 import struct
 from dataclasses import dataclass
+from typing import ClassVar
+
 
 @dataclass
 class DNSMessage:
