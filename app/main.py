@@ -20,7 +20,7 @@ def main():
     
             id = int.from_bytes(buf[:2], "big")
             replyMessage = Message.build_reply(
-                id = id,
+                id_query = id,
                 questions=[
                     Question(
                         name="codecrafters.io",
