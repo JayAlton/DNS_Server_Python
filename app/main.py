@@ -1,4 +1,8 @@
 import socket
+import argparse
+
+def send_request():
+    pass
 
 def calculate_domain_lab_lenght(first_bit, buf):
     bits = []
@@ -72,10 +76,6 @@ def build_response(buf):
     else:
         questions = build_question(0, buf[12:])
         answers = build_answer(0, buf[12:])
-    
-    print(f"questions: {questions}")
-    print(f"anwsers: {answers}")
-    
     return [questions, answers]
         
 def build_question(q_first_bit, buf):
@@ -106,6 +106,11 @@ def build_answer(q_first_bit, buf):
 def main():
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
+    
+    # Read command arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--resolver', nargs='*')
+    args = parser.parse_args()
 
     # Uncomment this block to pass the first stage
     #
@@ -126,14 +131,23 @@ def main():
             if type(answers) is list:
                 answers = b''.join(answers)
             
+            print("Prepering the request...")
+            # Preparing destination for another dns server
+            resolver_address, resolver_port = args.resolver[0].split(":")
+            resolver_dest = (resolver_address, int(resolver_port))
+            # Sending recived data to another dns
+            print("Sending request...") 
+            udp_socket.sendto(buf, resolver_dest)
+            buf2, source2 = udp_socket.recvfrom(512)
+            
+            #replace last 5 bits from recived buf to answer
+            answers = answers[:-5] + buf2[-5:]
+            print("Preparing response...")
             response = header + questions + answers
             
-            print(f"buf: {buf}")
-            print(f"source: {source}")
-            print(f"response: {response}")
-            print(f"13 byte: {buf[12]}")
-            
+            print("Sending response...")
             udp_socket.sendto(response, source)
+            print("Reply has been sent. End of program.")
         except Exception as e:
             print(f"Error receiving data: {e}")
             break
