@@ -49,6 +49,8 @@ class Message:
     @staticmethod
     def build_reply(id, questions, resource_records):
         flags = 0x8180  # Standard DNS flags for a reply (QR = 1, AA = 1, etc.)
+        flags |= (1 << 11) # Set Opcode to 1 
+        
         # Create a new message
         message = Message(id, flags, questions, resource_records)
         return message
