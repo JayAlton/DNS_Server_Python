@@ -1,48 +1,38 @@
 import socket
-from ipaddress import IPv4Address
-from .dns_message import ARecord, Message, Question, RecordType, RecordClass
-
+import struct
 
 def main():
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
-    print("Logs from your program will appear here!")
-
-    # Uncomment this block to pass the first stage
-    #
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.bind(("127.0.0.1", 2053))
-
-    print("Listening on port 2053...")
-
     while True:
         try:
             buf, source = udp_socket.recvfrom(512)
-    
-            id = int.from_bytes(buf[:2], "big")
-            replyMessage = Message.build_reply(
-                id=id,
-                questions=[
-                    Question(
-                        name="codecrafters.io",
-                        type=RecordType.A,
-                        klass=RecordClass.IN,
-                    )
-                ],
-                resource_records=[
-                    ARecord("codecrafters.io", 60, IPv4Address("192.168.1.1"))
-                ],
+            # Unpack the DNS query header
+            id, flags, qdcount, ancount, nscount, arcount = struct.unpack(
+                "!HHHHHH", buf[:12]
             )
-
-            
-            print(replyMessage.to_bytes())
-            print(len(replyMessage.to_bytes()))
-    
-            udp_socket.sendto(replyMessage.to_bytes(), source)
+            # Add the question section
+            name = b"\x0ccodecrafters\x02io\x00"
+            qtype = struct.pack("!H", 1)
+            qclass = struct.pack("!H", 1)
+            question = name + qtype + qclass
+            # Create a DNS response
+            response = struct.pack("!6H", id, 0x8180, qdcount, 1, 0, 0)
+            response = struct.pack(
+                "!6H", id, (flags & 0x0100) | 0x8000, qdcount, 1, nscount, arcount
+            )
+            response += question
+            response += name
+            response += struct.pack("!2H", 1, 0x0001)  # TYPE and CLASS
+            response += struct.pack("!I", 60)  # TTL
+            response += struct.pack("!H", 4)  # RDLENGTH
+            response += socket.inet_aton("8.8.8.8")  # RDATA
+            # Send the DNS response
+            udp_socket.sendto(response, source)
         except Exception as e:
             print(f"Error receiving data: {e}")
             break
 
-
-
 if __name__ == "__main__":
     main()
+
