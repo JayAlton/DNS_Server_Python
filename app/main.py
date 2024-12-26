@@ -12,48 +12,37 @@ def main():
                 "!HHHHHH", buf[:12]
             )
 
-            # Extract the current opcode (from the flags field)
-            opcode = (flags >> 11) & 0x0F  # Extract opcode from flags (top 4 bits)
-            rcode = flags & 0x0F  # Extract Rcode from the lower 4 bits of flags
+            # Extract the opcode and rcode from the flags field
+            opcode = (flags >> 11) & 0x0F  # Extract opcode (bits 11-14)
+            rcode = flags & 0x0F  # Extract Rcode (bits 0-3)
 
-            # Handle different opcodes
-            if opcode == 0:  # Standard Query (QUERY)
-                print(f"Received QUERY (opcode 0), responding normally.")
-                rcode = 0  # Set Rcode to NOERROR
-            elif opcode == 1:  # Inverse Query (IQUERY)
-                print(f"Received IQUERY (opcode 1), changing to QUERY response")
-                opcode = 0  # Change to QUERY response
-                 # Set Rcode to NOERROR
-            elif opcode == 2:  # Status Query (STATUS)
-                print(f"Received STATUS Query (opcode 2), responding with STATUS response.")
-                opcode = 2  # Ensure the response opcode is 2
-                rcode = 0  # Set Rcode to NOERROR for STATUS queries
-            else:
-                print(f"Unknown Opcode {opcode}, responding with QUERY.")
-                opcode = 0  # Default to QUERY for unknown opcodes
-                rcode = 0  # Set Rcode to NOERROR for unknown queries
+            print(f"Received Opcode: {opcode}, Rcode: {rcode}")
 
-            # Add the question section (codecrafters.io, IN, A)
+            # Check if it's an IQUERY (Opcode 1)
+            if opcode == 1:  # IQUERY
+                print(f"Received IQUERY (opcode 1), changing Rcode to 4 (NOTIMP) and changing to QUERY response.")
+                rcode = 4  # Set Rcode to 4 for IQUERY (Not Implemented)
+                opcode = 0  # Change Opcode to QUERY for the response
+
+            # Construct DNS response
             name = b"\x0ccodecrafters\x02io\x00"
             qtype = struct.pack("!H", 1)  # Type A (IPv4 address)
             qclass = struct.pack("!H", 1)  # Class IN (Internet)
             question = name + qtype + qclass
             
-            # Modify the flags to indicate a response (QR = 1) and set the appropriate opcode
-            flags &= 0x7FFF  # Clear the QR bit
-            flags |= 0x8000  # Set the QR bit to 1 for response
-            flags |= (opcode << 11)  # Set the correct opcode in the flags
+            # Modify flags for the response (QR = 1, set the appropriate opcode and rcode)
+            flags &= 0x7FFF  # Clear QR bit
+            flags |= 0x8000  # Set QR bit to 1 for response
+            flags &= 0xFF0F  # Clear the current Rcode (lower 4 bits)
+            flags |= (rcode & 0x0F)  # Set the new Rcode
+            flags |= (opcode << 11)  # Set the new Opcode (shifted by 11 bits)
 
-            # Set the Rcode (Response Code) based on the incoming query's flags
-            flags &= 0xFF0F  # Clear the Rcode bits (lower 4 bits)
-            flags |= (rcode & 0x0F)  # Set the Rcode (lower 4 bits)
-
-            # Create the DNS response header with the appropriate flags and opcode
+            # Create the DNS response header with the updated flags, opcode, and rcode
             response = struct.pack(
                 "!6H", id, flags, qdcount, 1, nscount, arcount
             )
             
-            # Add the question section to the response (same as in the query)
+            # Add the question section (same as in the query)
             response += question
             # Add the answer section (codecrafters.io -> 8.8.8.8)
             response += name
@@ -64,6 +53,7 @@ def main():
 
             # Send the DNS response
             udp_socket.sendto(response, source)
+
         except Exception as e:
             print(f"Error receiving data: {e}")
             break
