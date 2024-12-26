@@ -11,24 +11,27 @@ def main():
             id, flags, qdcount, ancount, nscount, arcount = struct.unpack(
                 "!HHHHHH", buf[:12]
             )
-            
+
             # Extract the current opcode (from the flags field)
             opcode = (flags >> 11) & 0x0F  # Extract opcode from flags (top 4 bits)
-            
+            rcode = flags & 0x0F  # Extract Rcode from the lower 4 bits of flags
+
             # Handle different opcodes
             if opcode == 0:  # Standard Query (QUERY)
-                # Proceed as a normal query response
                 print(f"Received QUERY (opcode 0), responding normally.")
+                rcode = 0  # Set Rcode to NOERROR
             elif opcode == 1:  # Inverse Query (IQUERY)
                 print(f"Received IQUERY (opcode 1), changing to QUERY response")
                 opcode = 0  # Change to QUERY response
+                rcode = 0  # Set Rcode to NOERROR
             elif opcode == 2:  # Status Query (STATUS)
                 print(f"Received STATUS Query (opcode 2), responding with STATUS response.")
-                # Handle STATUS query (opcode 2) by setting the response flags
                 opcode = 2  # Ensure the response opcode is 2
+                rcode = 0  # Set Rcode to NOERROR for STATUS queries
             else:
                 print(f"Unknown Opcode {opcode}, responding with QUERY.")
                 opcode = 0  # Default to QUERY for unknown opcodes
+                rcode = 0  # Set Rcode to NOERROR for unknown queries
 
             # Add the question section (codecrafters.io, IN, A)
             name = b"\x0ccodecrafters\x02io\x00"
@@ -41,10 +44,10 @@ def main():
             flags |= 0x8000  # Set the QR bit to 1 for response
             flags |= (opcode << 11)  # Set the correct opcode in the flags
 
-            # Set the Rcode (Response Code) to NOERROR (0)
-            flags &= 0xFF0F  # Clear the Rcode bits
-            flags |= (0 << 0)  # Set Rcode to 0 (NOERROR)
-            
+            # Set the Rcode (Response Code) based on the incoming query's flags
+            flags &= 0xFF0F  # Clear the Rcode bits (lower 4 bits)
+            flags |= (rcode & 0x0F)  # Set the Rcode (lower 4 bits)
+
             # Create the DNS response header with the appropriate flags and opcode
             response = struct.pack(
                 "!6H", id, flags, qdcount, 1, nscount, arcount
