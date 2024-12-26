@@ -61,7 +61,7 @@ class DNSMessage:
         ):
             combined2 |= val << cur_shift
             cur_shift += delta_shift
-            
+
         return struct.pack(
             ">HHHHHH",
             self.id,
@@ -99,7 +99,7 @@ def main():
     class_dict_python_int = {"IN": 1}
     class_dict = {k: struct.pack(">H", v) for k, v in class_dict_python_int.items()}
     
-    first = true
+    first = True
 
     while True:
         try:
