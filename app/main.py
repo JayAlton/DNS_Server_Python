@@ -23,7 +23,7 @@ def main():
             elif opcode == 1:  # Inverse Query (IQUERY)
                 print(f"Received IQUERY (opcode 1), changing to QUERY response")
                 opcode = 0  # Change to QUERY response
-                rcode = 4  # Set Rcode to NOERROR
+                 # Set Rcode to NOERROR
             elif opcode == 2:  # Status Query (STATUS)
                 print(f"Received STATUS Query (opcode 2), responding with STATUS response.")
                 opcode = 2  # Ensure the response opcode is 2
