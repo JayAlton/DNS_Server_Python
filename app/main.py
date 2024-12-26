@@ -17,7 +17,6 @@ def main():
             qclass = struct.pack("!H", 1)
             question = name + qtype + qclass
             # Create a DNS response
-            response = struct.pack("!6H", id, 0x8180, qdcount, 1, 0, 0)
             response = struct.pack(
                 "!6H", id, (flags & 0x0100) | 0x8000, qdcount, 1, nscount, arcount
             )
