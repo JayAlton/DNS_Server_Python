@@ -30,6 +30,9 @@ def main():
             flags &= 0x7FFF  # Clear the QR bit
             flags |= 0x8000  # Set the QR bit to 1 for response
             flags |= (opcode << 11)  # Set the correct opcode in the flags
+
+            # Set the Rcode (Response Code) to NOTIMP (4)
+            flags |= (4 << 0)  # Set the Rcode to 4 (NOTIMP)
             
             # Create the DNS response header with the appropriate flags and opcode
             response = struct.pack(
