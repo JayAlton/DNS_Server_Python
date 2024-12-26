@@ -117,7 +117,7 @@ def main():
                     ra=0,
                     z=0,
                     rcode=0,
-                    qdcount=qdcount,
+                    qdcount=1,
                     ancount=1,
                     nscount=0,
                     arcount=0,
