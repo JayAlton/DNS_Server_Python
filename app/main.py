@@ -20,7 +20,7 @@ def main():
     
             id = int.from_bytes(buf[:2], "big")
             replyMessage = Message.build_reply(
-                id = id,
+                id_query = id,
                 questions=[
                     Question(
                         name="codecrafters.io",
@@ -34,10 +34,10 @@ def main():
             )
 
             
-            print(reply_message.to_bytes())
-            print(len(reply_message.to_bytes()))
+            print(replyMessage.to_bytes())
+            print(len(replyMessage.to_bytes()))
     
-            udp_socket.sendto(reply_message.to_bytes(), source)
+            udp_socket.sendto(replyMessage.to_bytes(), source)
         except Exception as e:
             print(f"Error receiving data: {e}")
             break
